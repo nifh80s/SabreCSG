@@ -219,7 +219,7 @@ namespace Sabresaurus.SabreCSG
 		{
 			// Make sure we're actually being asked to create a compound brush
 			if(compoundBrushType != null 
-				&& compoundBrushType == typeof(Type) 
+				&& compoundBrushType is Type
 				&& !typeof(CompoundBrush).IsAssignableFrom((Type)compoundBrushType))
 			{
 				throw new ArgumentException("Specified type must be derived from CompoundBrush");
@@ -265,21 +265,27 @@ namespace Sabresaurus.SabreCSG
 				CreatePrimitiveBrush(PrimitiveBrushType.Cube);
 			}
 
-			if(GUI.Button(new Rect(30,0, 30, createBrushStyle.fixedHeight), SabreCSGResources.ButtonPrismTexture, createBrushStyle))
-			{
-				CreatePrimitiveBrush(PrimitiveBrushType.Prism);
-			}
+            if (GUI.Button(new Rect(30, 0, 30, createBrushStyle.fixedHeight), SabreCSGResources.ButtonSphereTexture, createBrushStyle))
+            {
+                CreatePrimitiveBrush(PrimitiveBrushType.Sphere);
+            }
 
-			//if(GUI.Button(new Rect(60,0, 30, createBrushStyle.fixedHeight), "", createBrushStyle))
-			//{
-			//}
+            if (GUI.Button(new Rect(60, 0, 30, createBrushStyle.fixedHeight), SabreCSGResources.ButtonIcoSphereTexture, createBrushStyle))
+            {
+                CreatePrimitiveBrush(PrimitiveBrushType.IcoSphere);
+            }
 
-            if (GUI.Button(new Rect(60, 0, 30, createBrushStyle.fixedHeight), SabreCSGResources.ButtonStairsTexture, createBrushStyle))
+            if (GUI.Button(new Rect(90, 0, 30, createBrushStyle.fixedHeight), SabreCSGResources.ButtonStairsTexture, createBrushStyle))
             {
                 CreateCompoundBrush<StairBrush>();
             }
+			
+            if (GUI.Button(new Rect(120, 0, 30, createBrushStyle.fixedHeight), SabreCSGResources.ButtonCurvedStairsTexture, createBrushStyle))
+            {
+                CreateCompoundBrush<CurvedStairBrush>();
+            }
 
-            GUILayout.Space(92);
+            GUILayout.Space(122 + 30);
 #if DEBUG_SABRECSG_PERF
 			// For debugging frame rate
 			GUILayout.Label(((int)(1 / csgModel.CurrentFrameDelta)).ToString(), SabreGUILayout.GetLabelStyle());
@@ -369,21 +375,27 @@ namespace Sabresaurus.SabreCSG
             // Line Two
             GUILayout.BeginHorizontal();
 
-			if(GUI.Button(new Rect(0,createBrushStyle.fixedHeight, 30, createBrushStyle.fixedHeight), SabreCSGResources.ButtonCylinderTexture, createBrushStyle))
+            if (GUI.Button(new Rect(0, createBrushStyle.fixedHeight, 30, createBrushStyle.fixedHeight), SabreCSGResources.ButtonPrismTexture, createBrushStyle))
+            {
+                CreatePrimitiveBrush(PrimitiveBrushType.Prism);
+            }
+
+            if (GUI.Button(new Rect(30,createBrushStyle.fixedHeight, 30, createBrushStyle.fixedHeight), SabreCSGResources.ButtonCylinderTexture, createBrushStyle))
 			{
 				CreatePrimitiveBrush(PrimitiveBrushType.Cylinder);
 			}
 
-			if(GUI.Button(new Rect(30,createBrushStyle.fixedHeight, 30, createBrushStyle.fixedHeight), SabreCSGResources.ButtonSphereTexture, createBrushStyle))
-			{
-				CreatePrimitiveBrush(PrimitiveBrushType.Sphere);
-			}
+            if (GUI.Button(new Rect(60, createBrushStyle.fixedHeight, 30, createBrushStyle.fixedHeight), SabreCSGResources.ButtonConeTexture, createBrushStyle))
+            {
+                CreatePrimitiveBrush(PrimitiveBrushType.Cone);
+            }
 
-            //if (GUI.Button(new Rect(60, createBrushStyle.fixedHeight, 30, createBrushStyle.fixedHeight), "", createBrushStyle))
-            //{
-            //}
+            if (GUI.Button(new Rect(90, createBrushStyle.fixedHeight, 30, createBrushStyle.fixedHeight), SabreCSGResources.ButtonShapeEditorTexture, createBrushStyle))
+            {
+                CreateCompoundBrush<ShapeEditor.ShapeEditorBrush>();
+            }
 
-            if (GUI.Button(new Rect(60,createBrushStyle.fixedHeight, 30, createBrushStyle.fixedHeight), "...", createBrushStyle))
+            if (GUI.Button(new Rect(120,createBrushStyle.fixedHeight, 30, createBrushStyle.fixedHeight), "...", createBrushStyle))
 			{
 				GenericMenu menu = new GenericMenu ();
 
@@ -393,10 +405,14 @@ namespace Sabresaurus.SabreCSG
 					menu.AddItem (new GUIContent (compoundBrushTypes[i].Name), false, CreateCompoundBrush, compoundBrushTypes[i]);
 				}
 
+                menu.AddSeparator("");
+                
+                menu.AddItem(new GUIContent("Add More?"), false, () => { EditorUtility.DisplayDialog("SabreCSG - About Compound Brushes", "Any custom compound brushes in your project are automatically detected and added to this list. Simply inherit from 'Sabresaurus.SabreCSG.CompoundBrush'.", "Okay"); });
+
 				menu.DropDown(new Rect(60,createBrushStyle.fixedHeight, 100, createBrushStyle.fixedHeight));
 			}
 
-			GUILayout.Space(92);
+			GUILayout.Space(122 + 30);
 
 			// Display brush count
 			GUILayout.Label(csgModel.BrushCount.ToStringWithSuffix(" brush", " brushes"), SabreGUILayout.GetLabelStyle());
@@ -414,7 +430,7 @@ namespace Sabresaurus.SabreCSG
 						brushes.Add(brush);
 					}
 				}
-                if (primaryBrush != null)
+                if (primaryBrush != null && primaryBrush.SupportsCsgOperations)
                 {
 					CSGMode brushMode = (CSGMode)EditorGUILayout.EnumPopup(primaryBrush.Mode, EditorStyles.toolbarPopup, GUILayout.Width(80));
 					if(brushMode != primaryBrush.Mode)

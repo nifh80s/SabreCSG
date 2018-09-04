@@ -39,7 +39,33 @@ namespace Sabresaurus.SabreCSG
 			return buttonPressed;
 		}
 
-	    public static bool Toggle(bool value, string title, params GUILayoutOption[] options)
+        public static void RightClickMiniButton(string text, string tooltip, Action onLeftClicked, Action onRightClicked)
+        {
+            RightClickMiniButton(new GUIContent(text, tooltip), onLeftClicked, onRightClicked);
+        }
+
+        public static void RightClickMiniButton(GUIContent content, Action onLeftClicked, Action onRightClicked)
+        {
+            bool buttonPressed = GUILayout.Button(new GUIContent(content.text, content.tooltip + "\nRight click to configure..."), EditorStyles.miniButton);
+            if (Event.current.type == EventType.Repaint)
+            {
+                Rect rect = GUILayoutUtility.GetLastRect();
+                float offset = rect.width - 9;
+                rect.height = 13;
+                rect.width = 13;
+                rect.y += 1;
+                rect.x = offset;
+                GUI.DrawTexture(rect, SabreCSGResources.MouseRightClickHintTexture);
+            }
+            // detect mouse right-click and invoke the callback.
+            if (buttonPressed && Event.current.button == 1)
+                onRightClicked.Invoke();
+            // use the actual button bool to determine a button press and invoke the callback.
+            else if (buttonPressed)
+                onLeftClicked.Invoke();
+        }
+
+        public static bool Toggle(bool value, string title, params GUILayoutOption[] options)
 	    {
 	        value = GUILayout.Toggle(value, title, EditorStyles.toolbarButton, options);
 	        return value;
@@ -364,6 +390,30 @@ namespace Sabresaurus.SabreCSG
             rect.center += new Vector2(1, 1);
             GUI.color = fillColor;
             GUI.DrawTexture(rect, EditorGUIUtility.whiteTexture);
+        }
+
+        /// <summary>
+        /// Displays a field for layer masks.
+        /// </summary>
+        /// <param name="label">The label to show.</param>
+        /// <param name="mask">The current mask.</param>
+        /// <returns>The new mask.</returns>
+        public static int LayerMaskField(GUIContent label, int mask)
+        {
+            System.Collections.Generic.List<string> layerNames = new System.Collections.Generic.List<string>();
+            for (int i = 0; i < 32; i++)
+            {
+                string layerName = UnityEditorInternal.InternalEditorUtility.GetLayerName(i);
+                //if (!(layerName == string.Empty))
+                //{
+                layerNames.Add(layerName);
+                //}
+            }
+
+            // this currently shows a lot of empty entries.
+            // we should figure out which ones are empty, not display those and fix the layer mask accordingly.
+
+            return EditorGUILayout.MaskField(label, mask, layerNames.ToArray());
         }
     }
 }
